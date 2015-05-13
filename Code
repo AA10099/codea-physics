@@ -1,0 +1,116 @@
+
+--# Main
+--Balancing game "Indo"
+
+displayMode(FULLSCREEN)
+
+function setup()
+    fontSize(30)
+    hs=readGlobalData("Indo")
+   
+     if hs==nil then
+        hs=0
+    end
+    tm=os.date("*t")
+    st=tm.min*60+tm.sec
+    dx=0
+
+    --Circle
+    cir=physics.body(CIRCLE,13)
+    cir.type=KINEMATIC
+    cir.x=WIDTH/2
+    cir.y=410
+    
+        --Rectangle
+    rec=physics.body(POLYGON,vec2(-200,0),vec2(-200,10),vec2(200,10),vec2(200,0))
+    rec.x=WIDTH/2
+    rec.y=500
+
+    --Square
+    sqr=physics.body(POLYGON,vec2(-10,-10),vec2(-10,10),vec2(10,10),vec2(10,-10))
+    sqr.x=WIDTH/2-100
+    sqr.y=HEIGHT-45
+    
+        --Edges
+    e1=physics.body(EDGE,vec2(0,0),vec2(0,HEIGHT*5))
+    e2=physics.body(EDGE,vec2(WIDTH,0),vec2(WIDTH,HEIGHT*5))
+    e3=physics.body(EDGE,vec2(0,HEIGHT),vec2(WIDTH,HEIGHT))
+
+end
+
+
+function draw()
+    background(40,40,50)
+    fill(6, 0, 255, 255)
+    text("Indo",WIDTH/2,HEIGHT-40)
+    tm=os.date("*t")
+    et=tm.min*60+tm.sec
+    text("Score "..et-st,WIDTH/2,HEIGHT-145)
+    text("Slide finger left and right to balance",WIDTH/2,135)
+    text("When ball and rectangle drop the game will restart",WIDTH/2,75)
+
+    --Circle
+    fill(0,71,255)
+    stroke(0, 71, 255)
+    strokeWidth(2.5)    
+    ellipse(cir.x,cir.y,20)  
+    
+        --Square
+    pushMatrix()
+    translate(sqr.x,sqr.y)
+    rotate(sqr.angle)
+    fill(0, 255, 137, 255) 
+    stroke(0, 255, 117, 255)
+    drawLines(sqr)
+    popMatrix()
+
+
+    --Rectangle
+    pushMatrix() 
+    translate(rec.x,rec.y)
+    rotate(rec.angle)
+    fill(255, 90, 0, 255) 
+    stroke(255, 114, 0, 255)
+    drawLines(rec)
+    popMatrix()
+
+    
+    --Stop circle at edge
+        if cir.x>WIDTH-75 then
+        cir.linearVelocity=vec2(-20,0)
+        dx=0
+    end
+
+        if cir.x<75 then
+        cir.linearVelocity=vec2(20,0)
+        dx=0
+    end
+
+    --Restart
+    if rec.y<-500 and sqr.y<-500 then
+        tm=os.date("*t")
+        et=tm.min*60+tm.sec
+        et=et-st -- High Score
+        if et>hs then
+            saveGlobalData("Indo",et)
+        end
+        restart() 
+        end
+    end
+
+function drawLines(pts)
+    for z=1,#pts.points do  --Points
+        p1=pts.points[z]
+        p2=pts.points[z%#pts.points+1]
+        line(p1.x,p1.y,p2.x,p2.y)   --Lines
+    end
+end
+
+function touched(t)
+    if dx~=nil then
+        if t.state==MOVING then --Move circle - Left right no up/down
+            dx=dx+t.deltaX
+            cir.linearVelocity=vec2(dx,dy)  
+        end
+    end
+end
